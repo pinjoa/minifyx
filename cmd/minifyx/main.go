@@ -20,23 +20,23 @@ import (
 
 func main() {
     var (
-        outPath            string
-        useStdout          bool
-        useStdin           bool
-        forceType          string
-        parallel           int
+        outPath   string
+        useStdout bool
+        useStdin  bool
+        forceType string
+        parallel  int
 
         // opções HTML
         preservePreCode    bool // controla tratamento especial de <pre>/<code>
         removeHTMLComments bool // remover comentários <!-- ... -->
 
-        disableHTMLWhitespace  bool // não colapsar espaços em HTML "de fora"
-        disableHTMLTemplates   bool // não minificar <template> e scripts de template
-        disableHTMLJSON        bool // não minificar JSON em <script type="application/*json"> e data-json
+        disableHTMLWhitespace bool // não colapsar espaços em HTML "de fora"
+        disableHTMLTemplates  bool // não minificar <template> e scripts de template
+        disableHTMLJSON       bool // não minificar JSON em <script type="application/*json"> e data-json
         
         // opções XML (novas)
-        removeXMLComments   bool
-        noXMLWhitespace     bool
+        removeXMLComments bool
+        noXMLWhitespace   bool
     )
 
     flag.StringVar(&outPath, "o", "", "Saída (ficheiro ou diretoria)")
@@ -60,7 +60,7 @@ func main() {
     xmlOpts := minifier.DefaultXMLOptions()
     xmlOpts.RemoveComments = removeXMLComments
     if noXMLWhitespace {
-        xmlOpts.CollapseTagWhitespace = false
+        xmlOpts.CollapseTagWhitespace =  false
         xmlOpts.CollapseAttrWhitespace = false
     }
 
