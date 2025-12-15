@@ -1,0 +1,207 @@
+// Author: João Pinto
+// Date: 2025-12-15
+// Purpose: módulo principal da aplicação
+// License: MIT
+
+package main
+
+import (
+	"bufio"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+
+	"minifyx/minifier"
+)
+
+func main() {
+    var (
+        outPath            string
+        useStdout          bool
+        useStdin           bool
+        forceType          string
+        parallel           int
+
+        // opções HTML
+        preservePreCode    bool // controla tratamento especial de <pre>/<code>
+        removeHTMLComments bool // remover comentários <!-- ... -->
+
+        disableHTMLWhitespace  bool // não colapsar espaços em HTML "de fora"
+        disableHTMLTemplates   bool // não minificar <template> e scripts de template
+        disableHTMLJSON        bool // não minificar JSON em <script type="application/*json"> e data-json
+        
+        // opções XML (novas)
+        removeXMLComments   bool
+        noXMLWhitespace     bool
+    )
+
+    flag.StringVar(&outPath, "o", "", "Saída (ficheiro ou diretoria)")
+    flag.BoolVar(&useStdout, "stdout", false, "Escrever para stdout")
+    flag.BoolVar(&useStdin, "stdin", false, "Ler de stdin")
+    flag.StringVar(&forceType, "type", "", "Forçar tipo: html|css|js|json|xml")
+    flag.IntVar(&parallel, "parallel", runtime.NumCPU(), "Número de goroutines em paralelo")
+
+    flag.BoolVar(&preservePreCode, "preserve-precode", true, "Preservar conteúdo especial em <pre>/<code> (e tratar <code> como bloco)")
+    flag.BoolVar(&removeHTMLComments, "remove-html-comments", true, "Remover comentários HTML")
+
+    flag.BoolVar(&disableHTMLWhitespace, "no-html-whitespace", false, "Não colapsar espaços em HTML (texto fora de blocos especiais)")
+    flag.BoolVar(&disableHTMLTemplates, "no-html-templates", false, "Não minificar HTML dentro de <template> e scripts de template")
+    flag.BoolVar(&disableHTMLJSON, "no-html-json", false, "Não minificar JSON em <script type=\"application/*json\"> e atributos data-json")
+
+    flag.BoolVar(&removeXMLComments, "remove-xml-comments", true, "Remover comentários XML")
+    flag.BoolVar(&noXMLWhitespace, "no-xml-whitespace", false, "Não colapsar espaços/indentação em XML")
+
+    flag.Parse()
+
+    xmlOpts := minifier.DefaultXMLOptions()
+    xmlOpts.RemoveComments = removeXMLComments
+    if noXMLWhitespace {
+        xmlOpts.CollapseTagWhitespace = false
+        xmlOpts.CollapseAttrWhitespace = false
+    }
+
+    htmlOpts := minifier.DefaultOptions()
+
+    // Comentários HTML
+    htmlOpts.RemoveHTMLComments = removeHTMLComments
+
+    // Tratamento de <pre>/<code>/<textarea>
+    if preservePreCode {
+        // comportamento “rico” que já validaste:
+        htmlOpts.PreservePre = true       // <pre> protegido
+        htmlOpts.TrimPreRight = true      // corta lixo no fim do <pre>
+        htmlOpts.MinifyCodeBlocks = true  // <code> numa linha, whitespace colapsado
+        // MinifyTextarea fica com default true
+    } else {
+        // modo mais “cru”: não tratar <pre> de forma especial
+        htmlOpts.PreservePre = false
+        htmlOpts.TrimPreRight = false
+        // ainda tratamos <code> como bloco, mas sem apertar o conteúdo
+        htmlOpts.MinifyCodeBlocks = false
+    }
+
+    // Templates HTML & scripts de template
+    if disableHTMLTemplates {
+        htmlOpts.MinifyHTMLTemplates = false
+        htmlOpts.MinifyScriptTemplates = false
+    }
+
+    // JSON (scripts + data-json)
+    if disableHTMLJSON {
+        htmlOpts.MinifyJSONScripts = false
+        htmlOpts.MinifyDataJSON = false
+    }
+
+    // Whitespace HTML “de fora”
+    if disableHTMLWhitespace {
+        htmlOpts.CollapseHTMLWhitespace = false
+        htmlOpts.TightenBlockTagGaps = false
+    }
+
+    if useStdin {
+        reader := bufio.NewReader(os.Stdin)
+        var b strings.Builder
+        for {
+            chunk, err := reader.ReadString('\n')
+            b.WriteString(chunk)
+            if err == io.EOF {
+                break
+            }
+            if err != nil {
+                fmt.Fprintln(os.Stderr, "Erro ao ler stdin:", err)
+                os.Exit(1)
+            }
+        }
+        input := b.String()
+        var t minifier.Type
+        switch strings.ToLower(forceType) {
+        case "html":
+            t = minifier.HTML
+        case "css":
+            t = minifier.CSS
+        case "js":
+            t = minifier.JS
+        case "json":
+            t = minifier.JSON
+        case "xml":
+            t = minifier.XML
+        default:
+            fmt.Fprintln(os.Stderr, "É necessário -type quando usa -stdin (html|css|js)")
+            os.Exit(2)
+        }
+        out := minifier.Minify(input, t, htmlOpts, xmlOpts)
+        if useStdout || outPath == "" {
+            fmt.Print(out)
+        } else {
+            if err := os.WriteFile(outPath, []byte(out), 0644); err != nil {
+                fmt.Fprintln(os.Stderr, "Erro a escrever saída:", err)
+                os.Exit(1)
+            }
+        }
+        return
+    }
+
+    args := flag.Args()
+    if len(args) == 0 {
+        fmt.Println("Uso: minifyx [opções] <ficheiros...>\nou: minifyx -help\nEx.: minifyx -parallel 4 index.html style.css app.js")
+        os.Exit(0)
+    }
+
+    type job struct { path string }
+    type result struct { path string; out string; err error }
+
+    jobs := make(chan job)
+    results := make(chan result)
+
+    for i := 0; i < parallel; i++ {
+        go func() {
+            for j := range jobs {
+                out, err := minifier.MinifyFile(j.path, htmlOpts, xmlOpts)
+                results <- result{path: j.path, out: out, err: err}
+            }
+        }()
+    }
+
+    go func() {
+        for _, p := range args {
+            jobs <- job{path: p}
+        }
+        close(jobs)
+    }()
+
+    pending := len(args)
+    for pending > 0 {
+        r := <-results
+        pending--
+        if r.err != nil {
+            fmt.Fprintln(os.Stderr, "Erro:", r.path, r.err)
+            continue
+        }
+        if useStdout {
+            fmt.Println(r.out)
+            continue
+        }
+        dest := outPath
+        if dest == "" {
+            ext := filepath.Ext(r.path)
+            base := strings.TrimSuffix(r.path, ext)
+            dest = base + ".min" + ext
+        } else {
+            info, _ := os.Stat(dest)
+            if info != nil && info.IsDir() {
+                ext := filepath.Ext(r.path)
+                name := filepath.Base(strings.TrimSuffix(r.path, ext))
+                dest = filepath.Join(dest, name+".min"+ext)
+            }
+        }
+        if err := os.WriteFile(dest, []byte(r.out), 0644); err != nil {
+            fmt.Fprintln(os.Stderr, "Erro a escrever:", dest, err)
+        } else {
+            fmt.Println("Minificado:", dest)
+        }
+    }
+}
