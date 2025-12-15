@@ -112,6 +112,10 @@ fmt.Println(min)
 
 ---
 
+```
+minifyx [opções] <ficheiros...>
+```
+
 ## ⚙️ Opções da CLI
 
 | Opção                   | Descrição                                                       |
@@ -130,10 +134,6 @@ fmt.Println(min)
 | `-remove-xml-comments`  | Remover comentários XML (default true)                          |
 | `-stdin`                | Ler de stdin                                                    |
 | `-stdout`               | Escrever para stdout                                            |
-
-```bash
-minifyx [opções] <ficheiros...>
-```
 
 ---
 
