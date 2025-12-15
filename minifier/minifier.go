@@ -103,9 +103,9 @@ type Options struct {
 func DefaultOptions() *Options {
     return &Options{
         // Comentários
-        RemoveHTMLComments:        true,
+        RemoveHTMLComments:          true,
         PreserveConditionalComments: false,
-        PreserveLicenseComments:   false,
+        PreserveLicenseComments:     false,
 
         // Blocos especiais
         PreservePre:       true,
