@@ -1,22 +1,19 @@
 // Author: João Pinto
 // Date: 2025-12-15
-// Purpose: MinifyXML faz uma minificação conservadora de XML
+// Purpose: MinifyXML faz uma minificação conservadora de XML:
+//          - remove comentários <!-- ... --> se opts.RemoveComments = true
+//          - colapsa espaços entre atributos se opts.CollapseAttrWhitespace = true
+//            (ex: <tag  a="1"   b="2"> → <tag a="1" b="2">)
+//          - remove nós de texto que sejam *apenas* whitespace (indentação)
+//            se opts.CollapseTagWhitespace = true
+//          - preserva sempre o conteúdo de CDATA, processing instructions e <!DOCTYPE ...>
+//          Não mexe no texto "real" (nós de texto com caracteres não whitespace).
 // License: MIT
 
 package minifier
 
 import "strings"
 
-// MinifyXML faz uma minificação conservadora de XML:
-//
-// - remove comentários <!-- ... --> se opts.RemoveComments = true
-// - colapsa espaços entre atributos se opts.CollapseAttrWhitespace = true
-//   (ex: <tag  a="1"   b="2"> → <tag a="1" b="2">)
-// - remove nós de texto que sejam *apenas* whitespace (indentação)
-//   se opts.CollapseTagWhitespace = true
-// - preserva sempre o conteúdo de CDATA, processing instructions e <!DOCTYPE ...>
-//
-// Não mexe no texto "real" (nós de texto com caracteres não whitespace).
 func MinifyXML(input string, opts *XMLOptions) string {
     if opts == nil {
         opts = DefaultXMLOptions()

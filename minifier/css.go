@@ -1,15 +1,15 @@
 // Author: João Pinto
 // Date: 2025-12-15
 // Purpose: MinifyCSS faz uma minificação conservadora de CSS
+//          remove comentários de bloco fora de strings e aperta espaços supérfluos
 // License: MIT
 
 package minifier
 
 import (
-    "strings"
+	"strings"
 )
 
-// MinifyCSS remove comentários de bloco fora de strings e aperta espaços supérfluos
 func MinifyCSS(input string) string {
     var out strings.Builder
     inBlockComment := false

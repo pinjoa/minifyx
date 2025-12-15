@@ -1,6 +1,8 @@
 // Author: João Pinto
 // Date: 2025-12-15
-// Purpose: MinifyHTML faz uma minificação de HTML sem danificar outros artefactos
+// Purpose: MinifyHTML minifica HTML preservando blocos sensíveis,
+//          minificando JS, CSS e JSON, e usando um minificador de whitespace
+//          com noção de contexto.
 // License: MIT
 
 package minifier
@@ -11,9 +13,6 @@ import (
 	"strings"
 )
 
-// MinifyHTML minifica HTML preservando blocos sensíveis,
-// minificando JS, CSS e JSON, e usando um minificador de whitespace
-// com noção de contexto.
 func MinifyHTML(input string, opts *Options) string {
     if opts == nil {
         opts = DefaultOptions()

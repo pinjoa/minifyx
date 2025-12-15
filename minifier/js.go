@@ -1,6 +1,8 @@
 // Author: João Pinto
 // Date: 2025-12-15
-// Purpose: MinifyJS remove comentários respeitando strings, templates e regex, tenta manter tudo numa linha (exceto newlines lógicos dentro de templates, que são convertidos para '\n') e depois aperta espaços desnecessários fora de literais.
+// Purpose: MinifyJS remove comentários respeitando strings, templates e regex, 
+//          tenta manter tudo numa linha (exceto newlines lógicos dentro de templates, 
+//          que são convertidos para '\n') e depois aperta espaços desnecessários fora de literais.
 // License: MIT
 
 package minifier

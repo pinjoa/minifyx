@@ -130,6 +130,10 @@ func DefaultOptions() *Options {
     }
 }
 
+func Auto(filename string, content string) (string, error) {
+    return Minify(content, DetectType(filename), DefaultOptions(), DefaultXMLOptions()), nil
+}
+
 // Minify por tipo
 func Minify(input string, t Type, hopts *Options, xopts *XMLOptions) string {
     switch t { 

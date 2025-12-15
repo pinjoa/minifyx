@@ -1,6 +1,7 @@
 // Author: João Pinto
 // Date: 2025-12-15
-// Purpose: MinifyJSON remove todo o whitespace fora de strings. Assume JSON válido e não altera nada dentro de strings.
+// Purpose: MinifyJSON remove todo o whitespace fora de strings. 
+//          Assume JSON válido e não altera nada dentro de strings.
 // License: MIT
 
 package minifier

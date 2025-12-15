@@ -72,34 +72,34 @@ func main() {
     // Tratamento de <pre>/<code>/<textarea>
     if preservePreCode {
         // comportamento “rico” que já validaste:
-        htmlOpts.PreservePre = true       // <pre> protegido
-        htmlOpts.TrimPreRight = true      // corta lixo no fim do <pre>
+        htmlOpts.PreservePre =      true  // <pre> protegido
+        htmlOpts.TrimPreRight =     true  // corta lixo no fim do <pre>
         htmlOpts.MinifyCodeBlocks = true  // <code> numa linha, whitespace colapsado
         // MinifyTextarea fica com default true
     } else {
         // modo mais “cru”: não tratar <pre> de forma especial
-        htmlOpts.PreservePre = false
-        htmlOpts.TrimPreRight = false
+        htmlOpts.PreservePre =      false
+        htmlOpts.TrimPreRight =     false
         // ainda tratamos <code> como bloco, mas sem apertar o conteúdo
         htmlOpts.MinifyCodeBlocks = false
     }
 
     // Templates HTML & scripts de template
     if disableHTMLTemplates {
-        htmlOpts.MinifyHTMLTemplates = false
+        htmlOpts.MinifyHTMLTemplates =   false
         htmlOpts.MinifyScriptTemplates = false
     }
 
     // JSON (scripts + data-json)
     if disableHTMLJSON {
         htmlOpts.MinifyJSONScripts = false
-        htmlOpts.MinifyDataJSON = false
+        htmlOpts.MinifyDataJSON =    false
     }
 
     // Whitespace HTML “de fora”
     if disableHTMLWhitespace {
         htmlOpts.CollapseHTMLWhitespace = false
-        htmlOpts.TightenBlockTagGaps = false
+        htmlOpts.TightenBlockTagGaps =    false
     }
 
     if useStdin {
@@ -195,6 +195,9 @@ func main() {
             if info != nil && info.IsDir() {
                 ext := filepath.Ext(r.path)
                 name := filepath.Base(strings.TrimSuffix(r.path, ext))
+                if forceType != "" {
+                    ext = "." + forceType
+                }
                 dest = filepath.Join(dest, name+".min"+ext)
             }
         }
