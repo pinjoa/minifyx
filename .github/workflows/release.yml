@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate semantic version
         id: semver
-        uses: PaulHatch/semantic-version@latest
+        uses: PaulHatch/semantic-version@v5.4.0
         with:
           tag_prefix: "v"
 
