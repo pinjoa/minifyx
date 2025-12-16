@@ -167,7 +167,7 @@ func buildAssets() {
 
     for _, f := range files {
         data, _ := os.ReadFile(f)
-        min, _ := minifier.Auto(f, string(data))
+        min := minifier.Minify(DetectType(f), string(data), nil, nil)
         os.WriteFile("dist/"+f, []byte(min), 0644)
     }
 }
