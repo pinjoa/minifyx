@@ -1,6 +1,6 @@
 // Author: João Pinto
 // Date: 2025-12-15
-// Purpose: módulo principal da aplicação
+// Purpose: módulo principal da aplicação CLI
 // License: MIT
 
 package main
