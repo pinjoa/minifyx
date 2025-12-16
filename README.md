@@ -77,7 +77,7 @@ func main() {
 }
 ```
 
-### Executar antes de compilar a primeira vez
+### Executar na pasta do projeto antes de compilar a primeira vez
 
 ```bash
 go get github.com/pinjoa/minifyx@latest
@@ -122,7 +122,9 @@ fmt.Println(min)
 
 ---
 
-```
+### Executar CLI
+
+```bash
 minifyx [opções] <ficheiros...>
 ```
 
