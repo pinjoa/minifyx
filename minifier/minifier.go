@@ -6,6 +6,7 @@
 package minifier
 
 import (
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,84 +21,60 @@ const (
     JS
     JSON
     XML
+    ERROR
 )
-
-type XMLOptions struct {
-    RemoveComments         bool // <!-- ... -->
-    CollapseAttrWhitespace bool // múltiplos espaços entre atributos → um
-    CollapseTagWhitespace  bool // remover whitespace entre tags, se for só whitespace
-    PreserveCDATA          bool // por defeito true
-}
-
-func DefaultXMLOptions() *XMLOptions {
-    return &XMLOptions{
-        RemoveComments:         true,
-        CollapseAttrWhitespace: true,
-        CollapseTagWhitespace:  true,
-        PreserveCDATA:          true,
-    }
-}
 
 type Options struct {
     // --- Comentários HTML ---
-
     // remover comentários HTML em geral (<!-- ... -->)
-    RemoveHTMLComments bool
-
+    RemoveHTMLComments          bool
     // preservar comentários condicionais tipo <!--[if lt IE 9]> ... <![endif]-->
     PreserveConditionalComments bool
-
     // preservar comentários de licença tipo <!--! ... -->
-    PreserveLicenseComments bool
+    PreserveLicenseComments     bool
 
     // --- Blocos especiais de texto/código ---
-
     // tratar <pre>/<code> como blocos especiais (não passar pelo minificador normal de HTML)
-    PreservePre bool
-
+    PreservePre      bool
     // em <pre>: remover apenas whitespace à direita, mantendo indentação à esquerda
-    TrimPreRight bool
-
+    TrimPreRight     bool
     // em <code>: minificar o conteúdo numa única linha (colapsar whitespace interno)
     MinifyCodeBlocks bool
-
     // em <textarea>: aplicar trim ao conteúdo (remover whitespace no início/fim)
-    MinifyTextarea bool
+    MinifyTextarea   bool
 
     // --- Templates HTML / scripts de template ---
-
     // minificar HTML dentro de <template>...</template>
-    MinifyHTMLTemplates bool
-
+    MinifyHTMLTemplates   bool
     // minificar HTML dentro de <script type="text/html|text/x-handlebars-template|text/x-template">
     MinifyScriptTemplates bool
 
     // --- CSS / JS / JSON embebidos ---
-
     // minificar CSS dentro de <style>...</style> usando MinifyCSS
-    MinifyInlineCSS bool
-
+    MinifyInlineCSS   bool
     // minificar JS dentro de <script>...</script> (scripts "normais") usando MinifyJS
-    MinifyInlineJS bool
-
+    MinifyInlineJS    bool
     // minificar JSON dentro de <script type="application/ld+json|application/json">
     // usando MinifyJSON
     MinifyJSONScripts bool
-
     // minificar JSON em atributos data-json="..." / data-json='...' usando MinifyJSON
-    MinifyDataJSON bool
+    MinifyDataJSON    bool
 
     // --- Whitespace & espaçamentos no HTML "de fora" ---
-
     // aplicar o minificador de whitespace HTML-aware (minifyHTMLWhitespace)
     // em texto e tags fora dos blocos protegidos
-    CollapseHTMLWhitespace bool
-
+    CollapseHTMLWhitespace  bool
     // preservar um espaço entre tags inline (ex: </span> <span>) para não colar texto
     PreserveInlineTagSpaces bool
-
     // remover espaços entre tags de "bloco" (ex: </div> <script> -> </div><script>)
-    TightenBlockTagGaps bool
+    TightenBlockTagGaps     bool
+
+    // --- relacionado apenas com XML ---
+    XMLRemoveComments         bool // <!-- ... -->
+    XMLCollapseAttrWhitespace bool // múltiplos espaços entre atributos → um
+    XMLCollapseTagWhitespace  bool // remover whitespace entre tags, se for só whitespace
+    XMLPreserveCDATA          bool // por defeito true
+
 }
 
 func DefaultOptions() *Options {
@@ -127,26 +104,32 @@ func DefaultOptions() *Options {
         CollapseHTMLWhitespace:  true,
         PreserveInlineTagSpaces: true,
         TightenBlockTagGaps:     true,
+
+        // XML apenas
+        XMLRemoveComments:         true,
+        XMLCollapseAttrWhitespace: true,
+        XMLCollapseTagWhitespace:  true,
+        XMLPreserveCDATA:          true,
     }
 }
 
 // Minify por tipo
-func Minify(input string, t Type, hopts *Options, xopts *XMLOptions) string {
+func Minify(input string, t Type, opts *Options) (string, error) {
     switch t { 
     case HTML:
-        if hopts == nil { hopts = DefaultOptions() }
-        return MinifyHTML(input, hopts)
+        if opts == nil { opts = DefaultOptions() }
+        return MinifyHTML(input, opts), nil
     case CSS:
-        return MinifyCSS(input)
+        return MinifyCSS(input), nil
     case JS:
-        return MinifyJS(input)
+        return MinifyJS(input), nil
     case JSON:
-        return MinifyJSON(input)
+        return MinifyJSON(input), nil
     case XML:
-        if xopts == nil { xopts = DefaultXMLOptions() }
-        return MinifyXML(input, xopts)
+        if opts == nil { opts = DefaultOptions() }
+        return MinifyXML(input, opts), nil
     default:
-        return input
+        return "", errors.New("tipo não suportado")
     }
 }
 
@@ -164,28 +147,31 @@ func DetectType(path string) Type {
     case ".xml":
         return XML
     default:
-        return HTML
+        return ERROR
     }
 }
 
 // MinifyFile lê, deteta tipo e minifica
-func MinifyFile(path string, hopts *Options, xopts *XMLOptions) (string, error) {
+func MinifyFile(path string, opts *Options) (string, error) {
     b, err := os.ReadFile(path)
     if err != nil { return "", err }
     t := DetectType(path)
-    return Minify(string(b), t, hopts, xopts), nil
+    if t == ERROR { return "", errors.New("tipo não suportado") }
+    return Minify(string(b), t, opts)
 }
 
 // MinifyReader lê de io.Reader e minifica conforme tipo
-func MinifyReader(r io.Reader, t Type, hopts *Options, xopts *XMLOptions) (string, error) {
+func MinifyReader(r io.Reader, t Type, opts *Options) (string, error) {
+    if t == ERROR { return "", errors.New("tipo não suportado") }
     b, err := io.ReadAll(r)
     if err != nil { return "", err }
-    return Minify(string(b), t, hopts, xopts), nil
+    return Minify(string(b), t, opts)
 }
 
 // MinifyToWriter lê de reader, minifica e escreve em writer
-func MinifyToWriter(r io.Reader, w io.Writer, t Type, hopts *Options, xopts *XMLOptions) error {
-    out, err := MinifyReader(r, t, hopts, xopts)
+func MinifyToWriter(r io.Reader, w io.Writer, t Type, opts *Options) error {
+    if t == ERROR { return errors.New("não suportado") }
+    out, err := MinifyReader(r, t, opts)
     if err != nil { return err }
     _, err = io.WriteString(w, out)
     return err
