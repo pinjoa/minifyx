@@ -15,7 +15,7 @@ import (
 	"runtime"
 	"strings"
 
-	"minifyx/minifier"
+	"github.com/pinjoa/minifyx/minifier"
 )
 
 func main() {
