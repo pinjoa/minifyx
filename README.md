@@ -71,7 +71,7 @@ import (
 func main() {
     input, _ := os.ReadFile("index.html")
 
-    result := minifier.MinifyHTML(string(input), nil)
+    result := minifier.MinifyHTML(string(input), minifier.DefaultOptions())
 
     fmt.Println(result)
 }
@@ -167,7 +167,7 @@ func buildAssets() {
 
     for _, f := range files {
         data, _ := os.ReadFile(f)
-        min := minifier.Minify(DetectType(f), string(data), nil, nil)
+        min := minifier.Minify(DetectType(f), string(data), minifier.DefaultOptions())
         os.WriteFile("dist/"+f, []byte(min), 0644)
     }
 }
