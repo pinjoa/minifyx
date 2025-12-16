@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate semantic version
         id: semver
-        uses: PaulHatch/semantic-version@v5
+        uses: PaulHatch/semantic-version@latest
         with:
           tag_prefix: "v"
 
@@ -38,8 +38,10 @@ jobs:
       - name: Build minifyx with version
         run: |
           VERSION=${{ steps.semver.outputs.version_tag }}
-          go build -ldflags "-X 'github.com/pinjoa/minifyx.Version=$VERSION'" \
-                   -o minifyx ./cmd/minifyx
+          go build -ldflags "\
+            -X 'github.com/pinjoa/minifyx.Version=${VERSION}' \
+            -X 'github.com/pinjoa/minifyx/cmd/minifyx.version=${VERSION}'" \
+            -o minifyx ./cmd/minifyx
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
