@@ -14,9 +14,9 @@ package minifier
 
 import "strings"
 
-func MinifyXML(input string, opts *XMLOptions) string {
+func MinifyXML(input string, opts *Options) string {
     if opts == nil {
-        opts = DefaultXMLOptions()
+        opts = DefaultOptions()
     }
 
     var out strings.Builder
@@ -54,14 +54,14 @@ func MinifyXML(input string, opts *XMLOptions) string {
 				s := textBuf.String()
 				if isAllXMLWhitespace(s) {
 						// texto é só indentação
-						if opts.CollapseTagWhitespace {
+						if opts.XMLCollapseTagWhitespace {
 								// deitamos fora
 						} else {
 								writeString(s)
 						}
 				} else {
 						// texto "real"
-						if opts.CollapseTagWhitespace {
+						if opts.XMLCollapseTagWhitespace {
 								// remove apenas whitespace no início/fim,
 								// preservando espaços internos (ex: "Texto com  espaços")
 								trimmed := strings.Trim(s, " \t\r\n")
@@ -80,14 +80,14 @@ func MinifyXML(input string, opts *XMLOptions) string {
         // 1) Comentários <!-- ... -->
         if inComment {
             if i+2 < n && b[i] == '-' && b[i+1] == '-' && b[i+2] == '>' {
-                if !opts.RemoveComments {
+                if !opts.XMLRemoveComments {
                     writeString("-->")
                 }
                 inComment = false
                 i += 3
                 continue
             }
-            if !opts.RemoveComments {
+            if !opts.XMLRemoveComments {
                 writeByte(c)
             }
             i++
@@ -153,7 +153,7 @@ func MinifyXML(input string, opts *XMLOptions) string {
                 inTag = false
                 i++
             case ' ', '\t', '\n', '\r':
-                if opts.CollapseAttrWhitespace {
+                if opts.XMLCollapseAttrWhitespace {
                     // colapsar whitespace entre nome/atributos em um único espaço
                     if lastOut != ' ' && lastOut != '<' {
                         writeByte(' ')
@@ -186,7 +186,7 @@ func MinifyXML(input string, opts *XMLOptions) string {
             if i+3 < n && b[i+1] == '!' && b[i+2] == '-' && b[i+3] == '-' {
                 // comentário <!-- ... -->
                 inComment = true
-                if !opts.RemoveComments {
+                if !opts.XMLRemoveComments {
                     writeString("<!--")
                 }
                 i += 4
