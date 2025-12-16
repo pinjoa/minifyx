@@ -71,13 +71,23 @@ import (
 func main() {
     input, _ := os.ReadFile("index.html")
 
-    result, err := minifier.MinifyHTML(string(input))
-    if err != nil {
-        panic(err)
-    }
+    result := minifier.MinifyHTML(string(input), nil)
 
     fmt.Println(result)
 }
+```
+
+### Executar antes de compilar a primeira vez
+
+```bash
+go get github.com/pinjoa/minifyx@latest
+```
+
+### Executar executar o código
+
+```bash
+go mod tidy
+go run .
 ```
 
 ### Minificar CSS
