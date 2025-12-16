@@ -57,49 +57,47 @@ func main() {
 
     flag.Parse()
 
-    xmlOpts := minifier.DefaultXMLOptions()
-    xmlOpts.RemoveComments = removeXMLComments
+    opts := minifier.DefaultOptions()
+    opts.XMLRemoveComments = removeXMLComments
     if noXMLWhitespace {
-        xmlOpts.CollapseTagWhitespace =  false
-        xmlOpts.CollapseAttrWhitespace = false
+        opts.XMLCollapseTagWhitespace =  false
+        opts.XMLCollapseAttrWhitespace = false
     }
 
-    htmlOpts := minifier.DefaultOptions()
-
     // Comentários HTML
-    htmlOpts.RemoveHTMLComments = removeHTMLComments
+    opts.RemoveHTMLComments = removeHTMLComments
 
     // Tratamento de <pre>/<code>/<textarea>
     if preservePreCode {
         // comportamento “rico” que já validaste:
-        htmlOpts.PreservePre =      true  // <pre> protegido
-        htmlOpts.TrimPreRight =     true  // corta lixo no fim do <pre>
-        htmlOpts.MinifyCodeBlocks = true  // <code> numa linha, whitespace colapsado
+        opts.PreservePre =      true  // <pre> protegido
+        opts.TrimPreRight =     true  // corta lixo no fim do <pre>
+        opts.MinifyCodeBlocks = true  // <code> numa linha, whitespace colapsado
         // MinifyTextarea fica com default true
     } else {
         // modo mais “cru”: não tratar <pre> de forma especial
-        htmlOpts.PreservePre =      false
-        htmlOpts.TrimPreRight =     false
+        opts.PreservePre =      false
+        opts.TrimPreRight =     false
         // ainda tratamos <code> como bloco, mas sem apertar o conteúdo
-        htmlOpts.MinifyCodeBlocks = false
+        opts.MinifyCodeBlocks = false
     }
 
     // Templates HTML & scripts de template
     if disableHTMLTemplates {
-        htmlOpts.MinifyHTMLTemplates =   false
-        htmlOpts.MinifyScriptTemplates = false
+        opts.MinifyHTMLTemplates =   false
+        opts.MinifyScriptTemplates = false
     }
 
     // JSON (scripts + data-json)
     if disableHTMLJSON {
-        htmlOpts.MinifyJSONScripts = false
-        htmlOpts.MinifyDataJSON =    false
+        opts.MinifyJSONScripts = false
+        opts.MinifyDataJSON =    false
     }
 
     // Whitespace HTML “de fora”
     if disableHTMLWhitespace {
-        htmlOpts.CollapseHTMLWhitespace = false
-        htmlOpts.TightenBlockTagGaps =    false
+        opts.CollapseHTMLWhitespace = false
+        opts.TightenBlockTagGaps =    false
     }
 
     if useStdin {
@@ -130,10 +128,14 @@ func main() {
         case "xml":
             t = minifier.XML
         default:
-            fmt.Fprintln(os.Stderr, "É necessário -type quando usa -stdin (html|css|js)")
+            fmt.Fprintln(os.Stderr, "É necessário -type quando usa -stdin (html|css|js|json|xml)")
             os.Exit(2)
         }
-        out := minifier.Minify(input, t, htmlOpts, xmlOpts)
+        out, err := minifier.Minify(input, t, opts)
+        if err != nil {
+            fmt.Fprintln(os.Stderr, err)
+            os.Exit(2)
+        }
         if useStdout || outPath == "" {
             fmt.Print(out)
         } else {
@@ -147,7 +149,7 @@ func main() {
 
     args := flag.Args()
     if len(args) == 0 {
-        fmt.Println("Uso: minifyx [opções] <ficheiros...>\nou: minifyx -help\nEx.: minifyx -parallel 4 index.html style.css app.js")
+        fmt.Println("Uso: minifyx [opções] <ficheiros...>\n\nou: minifyx -help\n\nEx.: minifyx -parallel 4 index.html style.css app.js")
         os.Exit(0)
     }
 
@@ -160,7 +162,7 @@ func main() {
     for i := 0; i < parallel; i++ {
         go func() {
             for j := range jobs {
-                out, err := minifier.MinifyFile(j.path, htmlOpts, xmlOpts)
+                out, err := minifier.MinifyFile(j.path, opts)
                 results <- result{path: j.path, out: out, err: err}
             }
         }()
