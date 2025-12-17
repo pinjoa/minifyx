@@ -18,13 +18,16 @@ import (
 	"github.com/pinjoa/minifyx/minifier"
 )
 
+var version = "dev" // para o binário
+
 func main() {
     var (
-        outPath   string
-        useStdout bool
-        useStdin  bool
-        forceType string
-        parallel  int
+        showVersion bool
+        outPath     string
+        useStdout   bool
+        useStdin    bool
+        forceType   string
+        parallel    int
 
         // opções HTML
         preservePreCode    bool // controla tratamento especial de <pre>/<code>
@@ -39,6 +42,7 @@ func main() {
         noXMLWhitespace   bool
     )
 
+    flag.BoolVar(&showVersion, "version", false, "mostrar versão")
     flag.StringVar(&outPath, "o", "", "Saída (ficheiro ou diretoria)")
     flag.BoolVar(&useStdout, "stdout", false, "Escrever para stdout")
     flag.BoolVar(&useStdin, "stdin", false, "Ler de stdin")
@@ -56,6 +60,12 @@ func main() {
     flag.BoolVar(&noXMLWhitespace, "no-xml-whitespace", false, "Não colapsar espaços/indentação em XML")
 
     flag.Parse()
+
+    if showVersion {
+        fmt.Printf("minifyx CLI: %s\n", version)
+        fmt.Printf("minifyx lib: %s\n", minifier.Version)
+        return
+    }
 
     opts := minifier.DefaultOptions()
     opts.XMLRemoveComments = removeXMLComments
