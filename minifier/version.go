@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"strings"
 )
 
 // Version é a versão atual da biblioteca; é substituída em build via ldflags.
@@ -14,7 +15,7 @@ var (
 )
 
 // ResolvedVersion devolve a versão efetiva da biblioteca.
-func ResolvedVersion() string {
+func resolvedVersion() string {
     // testar cenários:
     // 1) se o release.yml injectou a versão, usa-a
     if Version != "" && Version != "dev" {
@@ -62,13 +63,25 @@ func resolvedBuildDate() string {
 
 // VersionInfo devolve string formatada para o CLI.
 func VersionInfo() string {
-    return fmt.Sprintf(
-        "minifyx version %s\ncommit:    %s\nbuilt at:  %s\ngo:        %s\nplatform:  %s/%s",
-        ResolvedVersion(),
-        resolvedCommit(),
-        resolvedBuildDate(),
-        runtime.Version(),
-        runtime.GOOS,
-        runtime.GOARCH,
+    v := resolvedVersion()
+    c := resolvedCommit()
+    d := resolvedBuildDate()
+
+    lines := []string{
+        fmt.Sprintf("minifyx version %s", v),
+    }
+
+    if c != "" {
+        lines = append(lines, fmt.Sprintf("commit:    %s", c))
+    }
+    if d != "" {
+        lines = append(lines, fmt.Sprintf("built at:  %s", d))
+    }
+
+    lines = append(lines,
+        fmt.Sprintf("go:        %s", runtime.Version()),
+        fmt.Sprintf("platform:  %s/%s", runtime.GOOS, runtime.GOARCH),
     )
+
+    return strings.Join(lines, "\n")
 }
