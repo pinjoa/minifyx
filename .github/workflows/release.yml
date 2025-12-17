@@ -45,27 +45,41 @@ jobs:
           # Linux
           GOOS=linux GOARCH=amd64 go build \
             -ldflags "${LDFLAGS}" \
-            -o dist/minifyx-${VERSION}-linux-amd64 ./cmd/minifyx
+            -o minifyx ./cmd/minifyx
+          chmod +x minifyx
+          zip -j "dist/minifyx-${VERSION}-linux-amd64.zip" "minifyx"
 
           # Linux arm64
           GOOS=linux GOARCH=arm64 go build \
             -ldflags "${LDFLAGS}" \
-            -o dist/minifyx-${VERSION}-linux-arm64 ./cmd/minifyx
+            -o minifyx ./cmd/minifyx
+          chmod +x minifyx
+          zip -j "dist/minifyx-${VERSION}-linux-arm64.zip" "minifyx"
 
           # Windows
           GOOS=windows GOARCH=amd64 go build \
             -ldflags "${LDFLAGS}" \
-            -o dist/minifyx-${VERSION}-windows-amd64.exe ./cmd/minifyx
+            -o minifyx.exe ./cmd/minifyx
+          zip -j "dist/minifyx-${VERSION}-windows-amd64.zip" "minifyx.exe"
 
           # macOS (darwin)
           GOOS=darwin GOARCH=amd64 go build \
             -ldflags "${LDFLAGS}" \
-            -o dist/minifyx-${VERSION}-darwin-amd64 ./cmd/minifyx
+            -o minifyx ./cmd/minifyx
+          zip -j "dist/minifyx-${VERSION}-darwin-amd64.zip" "minifyx"
 
           # macOS (darwin)
           GOOS=darwin GOARCH=arm64 go build \
             -ldflags "${LDFLAGS}" \
-            -o dist/minifyx-${VERSION}-darwin-arm64 ./cmd/minifyx
+            -o minifyx ./cmd/minifyx
+          zip -j "dist/minifyx-${VERSION}-darwin-arm64.zip" "minifyx"
+
+      - name: Generate per-file SHA256
+        run: |
+          cd dist
+          for f in *.zip; do
+            sha256sum "$f" > "$f.sha256"
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
