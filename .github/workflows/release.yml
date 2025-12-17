@@ -40,8 +40,7 @@ jobs:
           VERSION=${{ steps.semver.outputs.version_tag }}
           mkdir -p dist
 
-          LDFLAGS="-X github.com/pinjoa/minifyx/minifier.Version=${VERSION} \
-                   -X github.com/pinjoa/minifyx/cmd/minifyx.version=${VERSION}"
+          LDFLAGS="-X github.com/pinjoa/minifyx/minifier.Version=${VERSION}"
 
           # Linux
           GOOS=linux GOARCH=amd64 go build \

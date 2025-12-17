@@ -18,8 +18,6 @@ import (
 	"github.com/pinjoa/minifyx/minifier"
 )
 
-var version = "dev" // para o binário
-
 func main() {
     var (
         showVersion bool
@@ -62,7 +60,6 @@ func main() {
     flag.Parse()
 
     if showVersion {
-        fmt.Printf("minifyx CLI: %s\n", version)
         fmt.Printf("minifyx lib: %s\n", minifier.Version)
         return
     }
