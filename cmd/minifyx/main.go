@@ -14,9 +14,23 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+    "runtime/debug"
 
 	"github.com/pinjoa/minifyx/minifier"
 )
+
+func resolvedVersion() string {
+    // 1) se o release.yml injectou a versão, usa-a
+    if minifier.Version != "" && minifier.Version != "dev" {
+        return minifier.Version
+    }
+    // 2) caso contrário, tenta ler a versão do módulo (go install @vX.Y.Z)
+    if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" {
+        return bi.Main.Version
+    }
+    // 3) fallback
+    return "dev"
+}
 
 func main() {
     var (
@@ -60,6 +74,7 @@ func main() {
     flag.Parse()
 
     if showVersion {
+        fmt.Printf("minifyx CLI: %s\n", resolvedVersion())
         fmt.Printf("minifyx lib: %s\n", minifier.Version)
         return
     }
