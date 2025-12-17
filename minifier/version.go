@@ -28,13 +28,45 @@ func ResolvedVersion() string {
     return "dev"
 }
 
+// resolvedCommit devolve o commit, se houver.
+func resolvedCommit() string {
+    // Se for preenchido por ldflags, usa.
+    if Commit != "" {
+        return Commit
+    }
+    // Caso contrário, tenta ver em BuildInfo (Go 1.18+, com vcs info)
+    if bi, ok := debug.ReadBuildInfo(); ok {
+        for _, s := range bi.Settings {
+            if s.Key == "vcs.revision" && s.Value != "" {
+                return s.Value
+            }
+        }
+    }
+    return ""
+}
+
+// resolvedBuildDate devolve a data de build, se houver.
+func resolvedBuildDate() string {
+    if BuildDate != "" {
+        return BuildDate
+    }
+    if bi, ok := debug.ReadBuildInfo(); ok {
+        for _, s := range bi.Settings {
+            if s.Key == "vcs.time" && s.Value != "" {
+                return s.Value
+            }
+        }
+    }
+    return ""
+}
+
 // VersionInfo devolve string formatada para o CLI.
 func VersionInfo() string {
     return fmt.Sprintf(
         "minifyx version %s\ncommit:    %s\nbuilt at:  %s\ngo:        %s\nplatform:  %s/%s",
-        Version,
-        Commit,
-        BuildDate,
+        ResolvedVersion(),
+        resolvedCommit(),
+        resolvedBuildDate(),
         runtime.Version(),
         runtime.GOOS,
         runtime.GOARCH,
