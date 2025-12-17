@@ -35,13 +35,35 @@ jobs:
           git tag "${{ steps.semver.outputs.version_tag }}"
           git push origin "${{ steps.semver.outputs.version_tag }}"
 
-      - name: Build minifyx with version
+      - name: Build minifyx for multiple platforms
         run: |
           VERSION=${{ steps.semver.outputs.version_tag }}
-          go build -ldflags "\
-            -X 'github.com/pinjoa/minifyx.Version=${VERSION}' \
-            -X 'github.com/pinjoa/minifyx/cmd/minifyx.version=${VERSION}'" \
-            -o minifyx ./cmd/minifyx
+          mkdir -p dist
+
+          # Linux
+          GOOS=linux GOARCH=amd64 go build \
+            -ldflags "-X 'github.com/pinjoa/minifyx.Version=${VERSION}'" \
+            -o dist/minifyx-${VERSION}-linux-amd64 ./cmd/minifyx
+
+          # Linux arm64
+          GOOS=linux GOARCH=arm64 go build \
+            -ldflags "-X 'github.com/pinjoa/minifyx.Version=${VERSION}'" \
+            -o dist/minifyx-${VERSION}-linux-arm64 ./cmd/minifyx
+
+          # Windows
+          GOOS=windows GOARCH=amd64 go build \
+            -ldflags "-X 'github.com/pinjoa/minifyx.Version=${VERSION}'" \
+            -o dist/minifyx-${VERSION}-windows-amd64.exe ./cmd/minifyx
+
+          # macOS (darwin)
+          GOOS=darwin GOARCH=amd64 go build \
+            -ldflags "-X 'github.com/pinjoa/minifyx.Version=${VERSION}'" \
+            -o dist/minifyx-${VERSION}-darwin-amd64 ./cmd/minifyx
+
+          # macOS (darwin)
+          GOOS=darwin GOARCH=arm64 go build \
+            -ldflags "-X 'github.com/pinjoa/minifyx.Version=${VERSION}'" \
+            -o dist/minifyx-${VERSION}-darwin-arm64 ./cmd/minifyx
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -49,5 +71,4 @@ jobs:
           tag_name: ${{ steps.semver.outputs.version_tag }}
           name: ${{ steps.semver.outputs.version_tag }}
           generate_release_notes: true
-          files: |
-            minifyx
+          files: dist/*
