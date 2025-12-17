@@ -367,9 +367,10 @@ func parseTagName(b []byte, ltIndex int) (string, bool) {
     }
 
     // ignorar '/', '!' etc.
-    if b[j] == '/' {
+    switch b[j] {
+    case '/':
         j++
-    } else if b[j] == '!' || b[j] == '?' {
+    case '!', '?':
         // <!DOCTYPE ...> ou <!-- ... --> → tratamos como não-inline
         return "", false
     }

@@ -42,9 +42,10 @@ func MinifyCSS(input string) string {
             }
 
             if inURL {
-                if c == '(' {
+                switch c {
+                case '(':
                     urlParenDepth++
-                } else if c == ')' {
+                case ')':
                     if urlParenDepth > 0 {
                         urlParenDepth--
                     }

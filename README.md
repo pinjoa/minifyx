@@ -80,7 +80,7 @@ func main() {
 ### Executar na pasta do projeto antes de compilar a primeira vez
 
 ```bash
-go get github.com/pinjoa/minifyx@latest
+go get github.com/pinjoa/minifyx/minifier
 ```
 
 ### Executar executar o código
