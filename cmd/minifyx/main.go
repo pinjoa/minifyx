@@ -75,7 +75,7 @@ func main() {
 
     if showVersion {
         fmt.Printf("minifyx CLI: %s\n", resolvedVersion())
-        fmt.Printf("minifyx lib: %s\n", minifier.Version)
+        fmt.Printf("minifyx lib: %s\n", minifier.ResolvedVersion())
         return
     }
 
