@@ -38,9 +38,13 @@ jobs:
       - name: Build minifyx for multiple platforms
         run: |
           VERSION=${{ steps.semver.outputs.version_tag }}
+          COMMIT=${GITHUB_SHA}
+          BUILDDATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           mkdir -p dist
 
-          LDFLAGS="-X github.com/pinjoa/minifyx/minifier.Version=${VERSION}"
+          LDFLAGS="-X github.com/pinjoa/minifyx/minifier.Version=${VERSION} \
+                   -X github.com/pinjoa/minifyx/minifier.Commit=${COMMIT} \
+                   -X github.com/pinjoa/minifyx/minifier.BuildDate=${BUILDDATE}"
 
           # Linux
           GOOS=linux GOARCH=amd64 go build \
